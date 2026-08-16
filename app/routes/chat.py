@@ -1,6 +1,7 @@
 import uuid
 from fastapi import APIRouter
 from app.schemas import ChatRequest, ChatResponse
+from app.exceptions import PromptInjectionDetectedError
 from app.llm.groq_client import call_groq
 
 router = APIRouter()
