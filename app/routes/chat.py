@@ -1,3 +1,4 @@
+import time
 import uuid
 from fastapi import APIRouter
 from app.schemas import ChatRequest, ChatResponse
@@ -13,13 +14,16 @@ async def chat_completions(payload: ChatRequest):
 
     start_trace(trace_id, model)
 
+    llm_start = time.perf_counter()
     result = call_groq(payload.message)
+    llm_latency_ms = round((time.perf_counter() - llm_start) * 1000, 2)
 
     complete_trace(
         trace_id=trace_id,
         prompt=payload.message,
         response=result["text"],
         status="success",
+        llm_latency_ms=llm_latency_ms
     )
 
     print(traces)
