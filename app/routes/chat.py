@@ -4,6 +4,8 @@ from fastapi import APIRouter
 from app.schemas import ChatRequest, ChatResponse
 from app.llm.groq_client import call_groq
 from app.tracing.tracer import start_trace, complete_trace, traces
+from app.security.prompt_guard import check_prompt_injection
+from app.exceptions import PromptInjectionDetectedError
 
 router = APIRouter()
 
@@ -13,6 +15,9 @@ async def chat_completions(payload: ChatRequest):
     model = "llama-3.1-8b-instant"
 
     start_trace(trace_id, model)
+
+    if check_prompt_injection(payload.message):
+        raise PromptInjectionDetectedError(trace_id)
 
     llm_start = time.perf_counter()
     result = call_groq(payload.message)
