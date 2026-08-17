@@ -23,7 +23,10 @@ async def chat_completions(payload: ChatRequest):
         prompt=payload.message,
         response=result["text"],
         status="success",
-        llm_latency_ms=llm_latency_ms
+        llm_latency_ms=llm_latency_ms,
+        prompt_tokens=result["prompt_tokens"],
+        completion_tokens=result["completion_tokens"],
+        total_tokens=result["total_tokens"]
     )
 
     print(traces)
