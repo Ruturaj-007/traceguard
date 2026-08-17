@@ -6,6 +6,7 @@ from app.llm.groq_client import call_groq
 from app.tracing.tracer import start_trace, complete_trace, traces
 from app.security.prompt_guard import check_prompt_injection
 from app.exceptions import PromptInjectionDetectedError
+from app.security.pii import mask_pii
 
 router = APIRouter()
 
@@ -19,8 +20,10 @@ async def chat_completions(payload: ChatRequest):
     if check_prompt_injection(payload.message):
         raise PromptInjectionDetectedError(trace_id)
 
+    safe_message = mask_pii(payload.message)
+
     llm_start = time.perf_counter()
-    result = call_groq(payload.message)
+    result = call_groq(safe_message)
     llm_latency_ms = round((time.perf_counter() - llm_start) * 1000, 2)
 
     complete_trace(
