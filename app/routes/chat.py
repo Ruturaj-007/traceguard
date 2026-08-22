@@ -1,21 +1,28 @@
 import time
 import uuid
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from app.schemas import ChatRequest, ChatResponse
 from app.llm.groq_client import call_groq
 from app.tracing.tracer import start_trace, complete_trace, traces
 from app.security.prompt_guard import check_prompt_injection
-from app.exceptions import PromptInjectionDetectedError
 from app.security.pii import mask_pii
+from app.security.rate_limit import check_rate_limit
+from app.exceptions import PromptInjectionDetectedError, RateLimitExceededError
+
 
 router = APIRouter()
 
 @router.post("/v1/chat/completions", response_model=ChatResponse)
-async def chat_completions(payload: ChatRequest):
+async def chat_completions(payload: ChatRequest, request: Request):
     trace_id = str(uuid.uuid4())
-    model = "llama-3.1-8b-instant"
+    model = "openai/gpt-oss-20b"
+
+    client_id = request.client.host     # get callers IP adress
 
     start_trace(trace_id, model)
+
+    if not check_rate_limit(client_id):
+        raise RateLimitExceededError(trace_id)
 
     if check_prompt_injection(payload.message):
         raise PromptInjectionDetectedError(trace_id)
@@ -28,7 +35,7 @@ async def chat_completions(payload: ChatRequest):
 
     complete_trace(
         trace_id=trace_id,
-        prompt=payload.message,
+        prompt=safe_message,
         response=result["text"],
         status="success",
         llm_latency_ms=llm_latency_ms,
