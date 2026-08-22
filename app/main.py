@@ -8,6 +8,10 @@ from app.exception_handlers import (
     prompt_injection_handler, pii_detected_handler, 
     llm_provider_error_handler, trace_not_found_handler, rate_limit_exceeded_handler
 )
+from app.database.database import engine
+from app.models import Base
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="TraceGuard",
