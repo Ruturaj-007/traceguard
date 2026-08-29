@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import chat
+from app.routes import chat, traces
 from app.exceptions import (
     PromptInjectionDetectedError, PIIDetectedError, 
     LLMProviderError, TraceNotFoundError, RateLimitExceededError
@@ -19,6 +19,7 @@ app = FastAPI(
 )
 
 app.include_router(chat.router)
+app.include_router(traces.router)
 
 app.add_exception_handler(PromptInjectionDetectedError, prompt_injection_handler)
 app.add_exception_handler(PIIDetectedError, pii_detected_handler)
