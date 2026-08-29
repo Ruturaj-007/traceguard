@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
-from app.models import Trace
+from app.models import Trace, TraceEvent
 
 
 def start_trace(db: Session, trace_id: str, model: str) -> None:
@@ -11,6 +11,11 @@ def start_trace(db: Session, trace_id: str, model: str) -> None:
         started_at=datetime.now(timezone.utc),
     )
     db.add(trace)
+    db.commit()
+
+def log_event(db: Session, trace_id: str, event_name: str) -> None:
+    event = TraceEvent(trace_id = trace_id, event_name = event_name)
+    db.add(event)
     db.commit()
 
 
@@ -44,3 +49,12 @@ def complete_trace(
 
 def get_trace(db: Session, trace_id: str) -> Trace | None:
     return db.query(Trace).filter(Trace.trace_id == trace_id).first()
+
+
+def get_events(db: Session, trace_id: str) -> list[TraceEvent]:
+    return (
+        db.query(TraceEvent)
+        .filter(TraceEvent.trace_id == trace_id)
+        .order_by(TraceEvent.created_at.asc())
+        .all()
+    )

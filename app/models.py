@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, Text, ForeignKey
 from sqlalchemy.orm import declarative_base
 from datetime import datetime, timezone
 
@@ -21,4 +21,12 @@ class Trace(Base):
     total_tokens = Column(Integer, nullable=True)
     started_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     completed_at = Column(DateTime(timezone=True), nullable=True)
-    
+
+
+class TraceEvent(Base):
+    __tablename__ = "trace_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    trace_id = Column(String, ForeignKey("traces.trace_id"), index=True, nullable=False)
+    event_name = Column(String, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

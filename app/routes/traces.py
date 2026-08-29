@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session 
+from sqlalchemy.orm import Session
 from app.database.database import get_db
-from app.tracing.tracer import get_trace
+from app.tracing.tracer import get_trace, get_events
 from app.exceptions import TraceNotFoundError
 
 router = APIRouter()
@@ -12,6 +12,8 @@ async def read_trace(trace_id: str, db: Session = Depends(get_db)):
 
     if trace is None:
         raise TraceNotFoundError(trace_id)
+
+    events = get_events(db, trace_id)
 
     return {
         "trace_id": trace.trace_id,
@@ -26,4 +28,8 @@ async def read_trace(trace_id: str, db: Session = Depends(get_db)):
         "response": trace.response,
         "started_at": trace.started_at,
         "completed_at": trace.completed_at,
+        "events": [
+            {"event": e.event_name, "timestamp": e.created_at}
+            for e in events
+        ],
     }
