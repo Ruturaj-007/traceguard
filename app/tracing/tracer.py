@@ -3,10 +3,11 @@ from sqlalchemy.orm import Session
 from app.models import Trace, TraceEvent
 
 
-def start_trace(db: Session, trace_id: str, model: str) -> None:
+def start_trace(db: Session, trace_id: str, model: str, prompt: str) -> None:
     trace = Trace(
         trace_id=trace_id,
         model=model,
+        prompt=prompt,
         status="started",
         started_at=datetime.now(timezone.utc),
     )

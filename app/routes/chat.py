@@ -20,7 +20,7 @@ async def chat_completions(payload: ChatRequest, request: Request, db: Session =
 
     client_id = request.client.host     # get callers IP adress
 
-    start_trace(db, trace_id, model)
+    start_trace(db, trace_id, model, payload.message)
     log_event(db, trace_id, "REQUEST_STARTED")
 
     log_event(db, trace_id, "SECURITY_CHECK")
