@@ -3,7 +3,11 @@ from sqlalchemy.orm import sessionmaker
 from app.config import settings
 
 # Engine betn app & db
-engine = create_engine(settings.database_url)
+engine = create_engine(
+    settings.database_url,
+    pool_pre_ping = True,
+    pool_recycle = 300
+)
 
 # Factory basically is a factory that creates database sessions  
 SessionLocal = sessionmaker(
