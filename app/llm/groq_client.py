@@ -1,17 +1,23 @@
-from groq import Groq 
+from groq import Groq, GroqError
 from app.config import settings
 
 client = Groq(api_key=settings.groq_api_key)
 
+MODEL_NAME = "openai/gpt-oss-20b"
+
+
 def call_groq(prompt: str) -> dict:
-    completion = client.chat.completions.create(
-        model = "openai/gpt-oss-20b",
-        messages = [{
-            "role": "user",
-            "content": prompt
-        }],
-        temperature = 0.3
-    )
+    try:
+        completion = client.chat.completions.create(
+            model = MODEL_NAME,
+            messages = [{
+                "role": "user",
+                "content": prompt
+            }],
+            temperature = 0.3
+        )
+    except GroqError as e:
+        raise e
 
     usage = completion.usage
 

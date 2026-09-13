@@ -8,14 +8,16 @@ import time
 import uuid
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
+from groq import GroqError
 from app.database.database import get_db
 from app.tracing.tracer import get_trace, get_events, start_trace, complete_trace, log_event
-from app.exceptions import TraceNotFoundError, PromptInjectionDetectedError, RateLimitExceededError
+from app.exceptions import TraceNotFoundError, PromptInjectionDetectedError, RateLimitExceededError, LLMProviderError
 from app.security.prompt_guard import check_prompt_injection
 from app.security.pii import mask_pii
 from app.security.rate_limit import check_rate_limit
-from app.llm.groq_client import call_groq
+from app.llm.groq_client import call_groq, MODEL_NAME
 from app.schemas import ChatResponse
+from app.routes.chat import get_client_id
 
 router = APIRouter()
 
@@ -56,14 +58,10 @@ async def replay_trace(trace_id: str, request: Request, db: Session = Depends(ge
     if original_trace is None:
         raise TraceNotFoundError(trace_id)
 
-    if original_trace.prompt is None:
-        raise TraceNotFoundError(trace_id)
-
     new_trace_id = str(uuid.uuid4())
-    model = original_trace.model
-    client_id = request.client.host
+    client_id = get_client_id(request)
 
-    start_trace(db, new_trace_id, model, original_trace.prompt)
+    start_trace(db, new_trace_id, MODEL_NAME, original_trace.prompt)
     log_event(db, new_trace_id, "REQUEST_STARTED")
     log_event(db, new_trace_id, "REPLAY_OF_" + trace_id)
 
@@ -81,7 +79,11 @@ async def replay_trace(trace_id: str, request: Request, db: Session = Depends(ge
 
     log_event(db, new_trace_id, "LLM_REQUEST")
     llm_start = time.perf_counter()
-    result = call_groq(safe_message)
+    try:
+        result = call_groq(safe_message)
+    except GroqError as e:
+        log_event(db, new_trace_id, "LLM_ERROR")
+        raise LLMProviderError(new_trace_id, reason=str(e))
     llm_latency_ms = round((time.perf_counter() - llm_start) * 1000, 2)
     log_event(db, new_trace_id, "LLM_RESPONSE")
 
@@ -102,4 +104,3 @@ async def replay_trace(trace_id: str, request: Request, db: Session = Depends(ge
         response=result["text"],
         trace_id=new_trace_id
     )
-
