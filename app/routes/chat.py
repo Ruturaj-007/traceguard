@@ -11,6 +11,7 @@ from app.security.pii import mask_pii
 from app.security.rate_limit import check_rate_limit
 from app.exceptions import PromptInjectionDetectedError, RateLimitExceededError, LLMProviderError
 from app.database.database import get_db
+from app.security.auth import verify_api_key
 
 router = APIRouter()
 
@@ -23,7 +24,7 @@ def get_client_id(request: Request) -> str:
 
 
 @router.post("/v1/chat/completions", response_model=ChatResponse)
-async def chat_completions(payload: ChatRequest, request: Request, db: Session = Depends(get_db)):
+async def chat_completions(payload: ChatRequest, request: Request, db: Session = Depends(get_db), api_key: str = Depends(verify_api_key)):
     trace_id = str(uuid.uuid4())
     client_id = get_client_id(request)
 

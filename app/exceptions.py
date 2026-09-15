@@ -18,3 +18,8 @@ class TraceNotFoundError(Exception):
 class RateLimitExceededError(Exception):
     def __init__(self, trace_id: str):
         self.trace_id = trace_id
+
+class InvalidApiKeyError(Exception):
+    def __init__(self):
+        self.message = "Invalid or Missing API Key"
+        

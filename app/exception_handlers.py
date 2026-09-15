@@ -1,8 +1,8 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.exceptions import (
-    PromptInjectionDetectedError, PIIDetectedError,
-    LLMProviderError, TraceNotFoundError, RateLimitExceededError
+    PromptInjectionDetectedError, PIIDetectedError, LLMProviderError,
+    TraceNotFoundError, RateLimitExceededError, InvalidApiKeyError
 )
 
 async def prompt_injection_handler(req: Request, exc: PromptInjectionDetectedError):
@@ -53,5 +53,14 @@ async def rate_limit_exceeded_handler(req: Request, exc: RateLimitExceededError)
             "error": "rate_limit_exceeded",
             "message": "Too many requests",
             "trace_id": exc.trace_id
+        },
+    )
+
+async def invalid_api_key_handler(req: Request, exc: InvalidApiKeyError):
+    return JSONResponse(
+        status_code=401,
+        content={
+            "error": "invalid_api_key",
+            "message": exc.message,
         },
     )

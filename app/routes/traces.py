@@ -17,7 +17,8 @@ from app.security.pii import mask_pii
 from app.security.rate_limit import check_rate_limit
 from app.llm.groq_client import call_groq, MODEL_NAME
 from app.schemas import ChatResponse
-from app.routes.chat import get_client_id
+from app.routes.chat import get_client_id 
+from app.security.auth import verify_api_key
 
 router = APIRouter()
 
@@ -52,7 +53,7 @@ async def read_trace(trace_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/traces/{trace_id}/replay", response_model=ChatResponse)
-async def replay_trace(trace_id: str, request: Request, db: Session = Depends(get_db)):
+async def replay_trace(trace_id: str, request: Request, db: Session = Depends(get_db), api_key: str = Depends(verify_api_key)):
     original_trace = get_trace(db, trace_id)
 
     if original_trace is None:
