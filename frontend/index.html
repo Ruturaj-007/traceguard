@@ -438,7 +438,6 @@
 </footer>
 
 <script>
-//   const API_BASE = "PASTE_YOUR_RENDER_API_URL_HERE"; // e.g. https://traceguard-api.onrender.com
 let sessionRequests = [];
 
 function updateSessionStats() {
@@ -450,7 +449,8 @@ function updateSessionStats() {
   document.getElementById('statAvgLatency').textContent = avg ? avg + 'ms' : '—';
 }  
 
-const API_BASE = "http://127.0.0.1:8000";
+// const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://traceguard-api-n6pz.onrender.com";
 
   const statusDot = document.getElementById('statusDot');
   const promptInput = document.getElementById('promptInput');
