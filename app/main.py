@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from app.routes import chat, traces
+from fastapi.middleware.cors import CORSMiddleware
 from app.exceptions import (
     PromptInjectionDetectedError, PIIDetectedError, LLMProviderError,
     TraceNotFoundError, RateLimitExceededError, InvalidApiKeyError
@@ -16,6 +17,13 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="TraceGuard",
     version="0.1.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(chat.router)
